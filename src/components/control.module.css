@@ -1,3 +1,18 @@
 .inputField {
   margin: 5px;
+  width: 80px;
+  font-size: 1rem;
+}
+
+.labelField {
+  margin: 5px;
+  font-size: 1rem;
+}
+.divField {
+  display: inline-flex;
+  background-color: darkorange;
+  margin: 5px;
+  border-radius: 5px;
+  padding: 2px;
+  text-align-last: right;
 }

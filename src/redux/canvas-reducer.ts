@@ -25,6 +25,7 @@ export type RectangleType = {
   height: number
   borderColor: string | null
   color: string
+  opacity: number
 }
 
 export type CircleType = {
@@ -50,14 +51,14 @@ export type AxisDataType = {
 
 let initialState = {
   limits: {
-    xMin: 0,
-    xMax: 1000,
+    xMin: 1600,
+    xMax: 2000,
     yMin: 0,
-    yMax: 700,
+    yMax: 300,
     paddingX: 20,
     paddingY: 20,
-    shiftX: 50,
-    shiftY: 50,
+    shiftX: 25,
+    shiftY: 30,
   } as LimitTypes,
   axis: {
     nx: 10,
@@ -108,39 +109,33 @@ let initialState = {
   ] as Array<CircleType>,
   rectangles: [
     {
-      x: 0,
+      x: 1710,
       y: 0,
-      width: 800,
-      height: 500,
+      width: 75,
+      height: 200,
       borderColor: 'blue',
       color: 'lightgreen',
+      opacity: 0.5,
     },
     {
-      x: 200,
-      y: 50,
-      width: 500,
-      height: 400,
+      x: 1805,
+      y: 0,
+      width: 75,
+      height: 200,
       borderColor: 'blue',
       color: 'lightyellow',
-    },
-    {
-      x: 100,
-      y: 100,
-      width: 50,
-      height: 20,
-      borderColor: 'blue',
-      color: 'green',
+      opacity: 0.5,
     },
   ] as Array<RectangleType>,
   freqOne: {
-    f0: 200,
-    f1: 220,
+    f0: 1805,
+    f1: 1820,
   } as FreqDataType,
   freqTwo: {
-    f0: 300,
-    f1: 340,
+    f0: 1835,
+    f1: 1850,
   } as FreqDataType,
-  duplex: 300,
+  duplex: -95,
 }
 export type CanvasStateType = typeof initialState
 
@@ -159,25 +154,39 @@ const reCalcAxis = (state: CanvasStateType): CanvasStateType => {
 }
 
 const calcFreqPims = (
+  freqReqtangles: Array<RectangleType>,
   freqOne: FreqDataType,
   freqTwo: FreqDataType
 ): Array<RectangleType> => {
-  let rectangles: Array<RectangleType> = []
+  let rectangles: Array<RectangleType> = freqReqtangles.slice(0, 2)
   let fmax = freqOne.f1 > freqTwo.f1 ? freqOne.f1 : freqTwo.f1
   let fmin = freqOne.f0 < freqTwo.f0 ? freqOne.f0 : freqTwo.f0
   rectangles.push({
     x: 2 * fmin - fmax,
     y: 0,
     width: 2 * (fmax - fmin) - fmin + fmax,
-    height: 200,
+    height: 30,
     borderColor: 'blue',
-    color: 'lightyellow',
+    color: 'red',
+    opacity: 0.4,
   })
+
+  rectangles.push({
+    x: 3 * fmin - 2 * fmax,
+    y: 0,
+    width: 3 * (fmax - fmin) - 2 * (fmin - fmax),
+    height: 5,
+    borderColor: 'blue',
+    color: 'orange',
+    opacity: 0.4,
+  })
+
   return rectangles
 }
 
 initialState = reCalcAxis(initialState)
 initialState.rectangles = calcFreqPims(
+  initialState.rectangles,
   initialState.freqOne,
   initialState.freqTwo
 )
@@ -209,10 +218,14 @@ const canvasReducer = (
           newState.freqTwo.f1 = state.freqTwo.f1
         }
       }
-      newState.rectangles = calcFreqPims(newState.freqOne, newState.freqTwo)
+      newState.rectangles = calcFreqPims(
+        newState.rectangles,
+        newState.freqOne,
+        newState.freqTwo
+      )
       return newState
     case SET_FREQ_DUPLEX:
-      let d = action.duplex > 0 ? action.duplex : state.duplex
+      let d = action.duplex !== 0 ? action.duplex : state.duplex
       return { ...state, duplex: d }
     default:
       return state
@@ -266,7 +279,7 @@ export type SetFreqDuplexActionType = {
 export const setFreqDuplex = (duplex: string): SetFreqDuplexActionType => {
   let d = Number(duplex)
   if (isNaN(d)) {
-    d = -1
+    d = 0
   }
   return {
     type: SET_FREQ_DUPLEX,

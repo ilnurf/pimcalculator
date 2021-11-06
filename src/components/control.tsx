@@ -36,12 +36,12 @@ const ControlMenu: React.FC<PropTypes> = (props) => {
     setFreqStart1min(props.freqTwo.f0.toString())
     setFreqStart1max(props.freqTwo.f1.toString())
     setFrequencyDuplex(props.duplex.toString())
-  }, [props.freqOne, props.freqTwo])
+  }, [props.freqOne, props.freqTwo, props.duplex])
 
   return (
     <div>
-      <div>
-        <label>f one min:</label>
+      <div className={s.divField}>
+        <label className={s.labelField}>f1 min:</label>
         <input
           type='text'
           value={freqStart0min}
@@ -49,9 +49,10 @@ const ControlMenu: React.FC<PropTypes> = (props) => {
           onKeyDown={onKeyDown}
           className={s.inputField}
         />
+        <span className={s.labelField}>MHz</span>
       </div>
-      <div>
-        <label>f one max:</label>
+      <div className={s.divField}>
+        <label className={s.labelField}>f1 max:</label>
         <input
           type='text'
           value={freqStart0max}
@@ -59,9 +60,10 @@ const ControlMenu: React.FC<PropTypes> = (props) => {
           onKeyDown={onKeyDown}
           className={s.inputField}
         />
+        <span className={s.labelField}>MHz</span>
       </div>
-      <div>
-        <label>f two min:</label>
+      <div className={s.divField}>
+        <label className={s.labelField}>f2 min:</label>
         <input
           type='text'
           value={freqStart1min}
@@ -69,9 +71,10 @@ const ControlMenu: React.FC<PropTypes> = (props) => {
           onKeyDown={onKeyDown}
           className={s.inputField}
         />
+        <span className={s.labelField}>MHz</span>
       </div>
-      <div>
-        <label>f two max:</label>
+      <div className={s.divField}>
+        <label className={s.labelField}>f2 max:</label>
         <input
           type='text'
           value={freqStart1max}
@@ -79,9 +82,10 @@ const ControlMenu: React.FC<PropTypes> = (props) => {
           onKeyDown={onKeyDown}
           className={s.inputField}
         />
+        <span className={s.labelField}>MHz</span>
       </div>
-      <div>
-        <label>Frequency duplex:</label>
+      <div className={s.divField}>
+        <label className={s.labelField}>Frequency duplex to RX:</label>
         <input
           type='text'
           value={freqDuplex}
@@ -89,6 +93,7 @@ const ControlMenu: React.FC<PropTypes> = (props) => {
           onKeyDown={onKeyDown}
           className={s.inputField}
         />
+        <span className={s.labelField}>MHz</span>
       </div>{' '}
     </div>
   )

@@ -31,37 +31,32 @@ function drawLimits(ctx: CanvasRenderingContext2D, limits: LimitTypes) {
 
 function drawLocations(ctx: CanvasRenderingContext2D, location: LocationType) {
   ctx.fillStyle = 'deepskyblue'
-  // ctx.shadowColor = 'dodgerblue'
-  // ctx.shadowBlur = 20
   ctx.fillRect(location.x, location.y, 30, 30)
-  // ctx.scale(SCALE, SCALE)
   // ctx.translate(location.x / SCALE - OFFSET, location.y / SCALE - OFFSET)
-  // ctx.fill(HOOK_PATH)
 }
 
-function drawCircle(ctx: CanvasRenderingContext2D, circle: CircleType) {
-  if (circle.color) ctx.fillStyle = circle.color
-  if (circle.borderColor) ctx.strokeStyle = circle.borderColor
-  ctx.beginPath()
-  ctx.ellipse(
-    circle.x,
-    circle.y,
-    circle.radius,
-    circle.radius,
-    0,
-    0,
-    2 * Math.PI
-  )
-  if (circle.color) ctx.stroke()
-  if (circle.borderColor) ctx.fill()
-}
+// function drawCircle(ctx: CanvasRenderingContext2D, circle: CircleType) {
+//   if (circle.color) ctx.fillStyle = circle.color
+//   if (circle.borderColor) ctx.strokeStyle = circle.borderColor
+//   ctx.beginPath()
+//   ctx.ellipse(
+//     circle.x,
+//     circle.y,
+//     circle.radius,
+//     circle.radius,
+//     0,
+//     0,
+//     2 * Math.PI
+//   )
+//   if (circle.color) ctx.stroke()
+//   if (circle.borderColor) ctx.fill()
+// }
 
 function drawRectangle(
   ctx: CanvasRenderingContext2D,
-  rectangle: RectangleType,
-  alpha: number
+  rectangle: RectangleType
 ) {
-  ctx.globalAlpha = alpha
+  ctx.globalAlpha = rectangle.opacity
   if (rectangle.borderColor) ctx.strokeStyle = rectangle.borderColor
   ctx.fillStyle = rectangle.color
   ctx.beginPath()
@@ -82,24 +77,32 @@ function drawFrequency(
   ctx.fillRect(freq.f0 + duplex, 0, freq.f1 - freq.f0, heght)
 }
 
-function drawAxis(ctx: CanvasRenderingContext2D, axis: AxisDataType) {
+function drawAxis(
+  ctx: CanvasRenderingContext2D,
+  axis: AxisDataType,
+  scale: number
+) {
   ctx.fillStyle = axis.fontColor
   ctx.strokeStyle = axis.fontColor
-  ctx.font = 'bold 24px Arial'
-  ctx.transform(1, 0, 0, -1, 0, 0)
+  ctx.font = 'bold 16px Arial'
+  ctx.transform(1 / scale, 0, 0, -1 / scale, 0, 0)
   for (let i = 0; i <= axis.nx; i++) {
-    ctx.moveTo(axis.xvals[i], -10)
-    ctx.lineTo(axis.xvals[i], 10)
+    ctx.moveTo(axis.xvals[i] * scale, -10)
+    ctx.lineTo(axis.xvals[i] * scale, 10)
     ctx.stroke()
-    ctx.fillText(axis.xlabels[i], axis.xvals[i] - 10, 30)
+    ctx.fillText(axis.xlabels[i], axis.xvals[i] * scale - 10, 30)
   }
 }
 
-function draw(ctx: CanvasRenderingContext2D, props: CanvasPropType) {
+function draw(
+  ctx: CanvasRenderingContext2D,
+  props: CanvasPropType,
+  scale: number
+) {
   ctx.save()
   drawLimits(ctx, props.limits)
   // props.circles.forEach((circle) => drawCircle(ctx, circle))
-  // props.locations.forEach((location) => drawLocations(ctx, location))
+  props.locations.forEach((location) => drawLocations(ctx, location))
   drawFrequency(
     ctx,
     props.freqOne,
@@ -115,8 +118,8 @@ function draw(ctx: CanvasRenderingContext2D, props: CanvasPropType) {
     'red'
   )
 
-  props.rectangles.forEach((rectangle) => drawRectangle(ctx, rectangle, 0.5))
-  drawAxis(ctx, props.axis)
+  props.rectangles.forEach((rectangle) => drawRectangle(ctx, rectangle))
+  drawAxis(ctx, props.axis, scale)
   ctx.restore()
 }
 
@@ -142,10 +145,9 @@ const CanvasMain: React.FC<CanvasPropType> = (props) => {
         const ctx = canvas.getContext('2d')
         if (canvas.parentElement && ctx) {
           let r = canvas.parentElement.getBoundingClientRect()
-          canvas.width = r.width
-          canvas.height = r.height
-          // ctx.fillStyle = 'deepskyblue'
-          console.log(r.width, r.height)
+          canvas.width = r.width - 10
+          canvas.height = r.height - 10
+          // console.log(r.width, r.height)
           // ctx.fillRect(0, 0, canvas.width, canvas.height)
           // ctx.clearRect(0, 0, window.innerHeight, window.innerWidth)
           let scaleX =
@@ -156,18 +158,20 @@ const CanvasMain: React.FC<CanvasPropType> = (props) => {
             0,
             0,
             -scaleX,
-            props.limits.paddingX + props.limits.shiftX * scaleX,
+            props.limits.paddingX +
+              (-props.limits.xMin + props.limits.shiftX) * scaleX,
             (props.limits.yMax - props.limits.yMin - props.limits.shiftY) *
               scaleX +
               props.limits.paddingY
           )
-          draw(ctx, props)
+          draw(ctx, props, scaleX)
         }
       }
     }
     window.addEventListener('resize', handleResize)
+    window.setTimeout(handleResize, 300)
     handleResize()
-  })
+  }, [props])
 
   return (
     <div className={s.mainCanvas}>
