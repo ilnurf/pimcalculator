@@ -49,6 +49,12 @@ export type AxisDataType = {
   fontSize: number
 }
 
+export type LineGraphType = {
+  xy: Array<{ x: number; y: number }>
+  color: string
+  opacity: number
+}
+
 let initialState = {
   limits: {
     xMin: 1600,
@@ -112,21 +118,22 @@ let initialState = {
       x: 1710,
       y: 0,
       width: 75,
-      height: 200,
+      height: 240,
       borderColor: 'blue',
-      color: 'lightgreen',
+      color: 'aqua',
       opacity: 0.5,
     },
     {
       x: 1805,
       y: 0,
       width: 75,
-      height: 200,
+      height: 240,
       borderColor: 'blue',
       color: 'lightyellow',
       opacity: 0.5,
     },
   ] as Array<RectangleType>,
+  lineGraphs: [] as Array<LineGraphType>,
   freqOne: {
     f0: 1805,
     f1: 1820,
@@ -148,47 +155,158 @@ const reCalcAxis = (state: CanvasStateType): CanvasStateType => {
   for (let i = 0; i <= state.axis.nx; i++) {
     x = state.limits.xMin + i * dx
     newState.axis.xvals[i] = x
-    newState.axis.xlabels[i] = x.toString()
+    newState.axis.xlabels[i] = Math.round(x).toString()
   }
   return newState
 }
 
-const calcFreqPims = (
-  freqReqtangles: Array<RectangleType>,
+const eleminateStrikes = (
+  data: Array<{ x: number; y: number }>
+): Array<{ x: number; y: number }> => {
+  let newData: Array<{ x: number; y: number }> = new Array(data.length)
+  for (let i = 0; i < data.length - 1; i = i + 2) {
+    if (data[i].y > data[i + 1].y) {
+      newData[i] = { x: data[i].x, y: data[i].y }
+      newData[i + 1] = { x: data[i + 1].x, y: data[i].y }
+    } else {
+      newData[i] = { x: data[i].x, y: data[i + 1].y }
+      newData[i + 1] = { x: data[i + 1].x, y: data[i + 1].y }
+    }
+  }
+  newData[data.length - 1] = {
+    x: data[data.length - 1].x,
+    y: data[data.length - 1].y,
+  }
+  return newData
+}
+
+// const calcFreqPims = (
+//   freqReqtangles: Array<RectangleType>,
+//   freqOne: FreqDataType,
+//   freqTwo: FreqDataType
+// ): Array<RectangleType> => {
+//   let rectangles: Array<RectangleType> = freqReqtangles.slice(0, 2)
+//   let fmax = freqOne.f1 > freqTwo.f1 ? freqOne.f1 : freqTwo.f1
+//   let fmin = freqOne.f0 < freqTwo.f0 ? freqOne.f0 : freqTwo.f0
+//   rectangles.push({
+//     x: 2 * fmin - fmax,
+//     y: 0,
+//     width: 2 * (fmax - fmin) - fmin + fmax,
+//     height: 30,
+//     borderColor: 'blue',
+//     color: 'red',
+//     opacity: 0.1,
+//   })
+
+//   rectangles.push({
+//     x: 3 * fmin - 2 * fmax,
+//     y: 0,
+//     width: 3 * (fmax - fmin) - 2 * (fmin - fmax),
+//     height: 5,
+//     borderColor: 'blue',
+//     color: 'orange',
+//     opacity: 0.3,
+//   })
+
+//   return rectangles
+// }
+
+let funcAddPim3 = (f1: number, f2: number, data: any, num: number) => {
+  let x
+  x = Math.round(num * (2 * f1 - f2))
+  data[x] === undefined ? (data[x] = 1) : (data[x] = data[x] + 1)
+  x = Math.round(num * (2 * f2 - f1))
+  data[x] === undefined ? (data[x] = 1) : (data[x] = data[x] + 1)
+}
+
+let funcAddPim5 = (f1: number, f2: number, data: any, num: number) => {
+  let x
+  x = Math.round(num * (3 * f1 - 2 * f2))
+  data[x] === undefined ? (data[x] = 1) : (data[x] = data[x] + 1)
+  x = Math.round(num * (3 * f2 - 2 * f1))
+  data[x] === undefined ? (data[x] = 1) : (data[x] = data[x] + 1)
+}
+
+let calcPimFreqs = (
   freqOne: FreqDataType,
-  freqTwo: FreqDataType
-): Array<RectangleType> => {
-  let rectangles: Array<RectangleType> = freqReqtangles.slice(0, 2)
+  freqTwo: FreqDataType,
+  num: number,
+  height: number,
+  pimFunc: (f1: number, f2: number, data: any, num: number) => void
+) => {
   let fmax = freqOne.f1 > freqTwo.f1 ? freqOne.f1 : freqTwo.f1
   let fmin = freqOne.f0 < freqTwo.f0 ? freqOne.f0 : freqTwo.f0
-  rectangles.push({
-    x: 2 * fmin - fmax,
-    y: 0,
-    width: 2 * (fmax - fmin) - fmin + fmax,
-    height: 30,
-    borderColor: 'blue',
+  let step = (fmax - fmin) / num
+
+  let data: any = {}
+  for (let i = freqOne.f0; i < freqOne.f1; i = i + step) {
+    for (let j = freqTwo.f0; j < freqTwo.f1; j = j + step) {
+      pimFunc(i, j, data, num)
+    }
+  }
+  // inner band PIM
+  for (let i = freqOne.f0; i < freqOne.f1; i = i + step) {
+    for (let j = freqOne.f0; j < freqOne.f1; j = j + step) {
+      pimFunc(i, j, data, num)
+    }
+  }
+  for (let i = freqTwo.f0; i < freqTwo.f1; i = i + step) {
+    for (let j = freqTwo.f0; j < freqTwo.f1; j = j + step) {
+      pimFunc(i, j, data, num)
+    }
+  }
+  let maxy = 0
+  let data2: Array<{ x: number; y: number }>
+  data2 = Object.keys(data).map((d: any) => {
+    if (data[d] > maxy) maxy = data[d]
+    return { x: d / num, y: data[d] }
+  })
+  data2.map((d) => (d.y = (d.y / maxy) * height))
+  data2.sort((a, b) => {
+    return a.x - b.x
+  })
+
+  return eleminateStrikes(data2)
+}
+
+const calcFreqPims2 = (
+  freqOne: FreqDataType,
+  freqTwo: FreqDataType,
+  num: number
+): Array<LineGraphType> => {
+  let linegraphs: Array<LineGraphType> = []
+
+  const height = 100
+  let data2 = calcPimFreqs(freqOne, freqTwo, num, height, funcAddPim3)
+
+  linegraphs.push({
+    xy: data2,
     color: 'red',
-    opacity: 0.4,
+    opacity: 0.5,
   })
 
-  rectangles.push({
-    x: 3 * fmin - 2 * fmax,
-    y: 0,
-    width: 3 * (fmax - fmin) - 2 * (fmin - fmax),
-    height: 5,
-    borderColor: 'blue',
-    color: 'orange',
-    opacity: 0.4,
-  })
+  // console.log(data2)
 
-  return rectangles
+  data2 = calcPimFreqs(freqOne, freqTwo, num, height / 4, funcAddPim5)
+
+  linegraphs.push({
+    xy: data2,
+    color: 'black',
+    opacity: 0.5,
+  })
+  return linegraphs
 }
 
 initialState = reCalcAxis(initialState)
-initialState.rectangles = calcFreqPims(
-  initialState.rectangles,
+// initialState.rectangles = calcFreqPims(
+//   initialState.rectangles,
+//   initialState.freqOne,
+//   initialState.freqTwo
+// )
+initialState.lineGraphs = calcFreqPims2(
   initialState.freqOne,
-  initialState.freqTwo
+  initialState.freqTwo,
+  1000
 )
 
 const canvasReducer = (
@@ -218,10 +336,15 @@ const canvasReducer = (
           newState.freqTwo.f1 = state.freqTwo.f1
         }
       }
-      newState.rectangles = calcFreqPims(
-        newState.rectangles,
+      // newState.rectangles = calcFreqPims(
+      //   newState.rectangles,
+      //   newState.freqOne,
+      //   newState.freqTwo
+      // )
+      newState.lineGraphs = calcFreqPims2(
         newState.freqOne,
-        newState.freqTwo
+        newState.freqTwo,
+        1000
       )
       return newState
     case SET_FREQ_DUPLEX:

@@ -8,6 +8,7 @@ import {
   LimitTypes,
   FreqDataType,
   AxisDataType,
+  LineGraphType,
 } from '../redux/canvas-reducer'
 import CanvasMain from './canvas'
 import { AppStateType } from '../redux/store'
@@ -19,6 +20,7 @@ let mapStateToProps = (state: AppStateType) => {
     locations: state.canvasPage.locations,
     circles: state.canvasPage.circles,
     rectangles: state.canvasPage.rectangles,
+    lineGraphs: state.canvasPage.lineGraphs,
     freqOne: state.canvasPage.freqOne,
     freqTwo: state.canvasPage.freqTwo,
     duplex: state.canvasPage.duplex,
@@ -31,6 +33,7 @@ type MapToStatePropsType = {
   locations: Array<LocationType>
   circles: Array<CircleType>
   rectangles: Array<RectangleType>
+  lineGraphs: Array<LineGraphType>
   freqOne: FreqDataType
   freqTwo: FreqDataType
   duplex: number

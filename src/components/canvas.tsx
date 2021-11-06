@@ -7,17 +7,16 @@ import {
   RectangleType,
   FreqDataType,
   AxisDataType,
+  LineGraphType,
 } from '../redux/canvas-reducer'
 
 function drawLimits(ctx: CanvasRenderingContext2D, limits: LimitTypes) {
-  ctx.beginPath()
-  ctx.strokeStyle = 'black'
-  ctx.rect(
-    limits.xMin,
-    limits.yMin,
-    limits.xMax - limits.xMin - limits.shiftX * 2,
-    limits.yMax - limits.yMin - limits.shiftY * 2
-  )
+  // ctx.rect(
+  //   limits.xMin,
+  //   limits.yMin,
+  //   limits.xMax - limits.xMin - limits.shiftX * 2,
+  //   limits.yMax - limits.yMin - limits.shiftY * 2
+  // )
   ctx.fillStyle = 'lightblue'
   ctx.fillRect(
     limits.xMin - limits.shiftX,
@@ -25,7 +24,10 @@ function drawLimits(ctx: CanvasRenderingContext2D, limits: LimitTypes) {
     limits.xMax - limits.xMin,
     limits.yMax - limits.yMin
   )
-
+  ctx.strokeStyle = 'black'
+  ctx.beginPath()
+  ctx.moveTo(limits.xMin, limits.yMin)
+  ctx.lineTo(limits.xMax - 2 * limits.shiftX, limits.yMin)
   ctx.stroke()
 }
 
@@ -62,6 +64,22 @@ function drawRectangle(
   ctx.beginPath()
   ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
   if (rectangle.borderColor) ctx.stroke()
+  ctx.globalAlpha = 1
+}
+
+function drawLineGraph(ctx: CanvasRenderingContext2D, graph: LineGraphType) {
+  ctx.globalAlpha = graph.opacity
+  ctx.fillStyle = graph.color
+  if (graph.xy.length === 0) return
+  let region = new Path2D()
+  region.moveTo(graph.xy[0].x, 0)
+  for (let i = 1; i < graph.xy.length; i++) {
+    region.lineTo(graph.xy[i].x, graph.xy[i].y)
+  }
+  region.lineTo(graph.xy[graph.xy.length - 1].x, 0)
+
+  region.closePath()
+  ctx.fill(region)
   ctx.globalAlpha = 1
 }
 
@@ -115,10 +133,11 @@ function draw(
     props.freqTwo,
     props.duplex,
     (props.limits.yMax - props.limits.shiftY) * 0.7,
-    'red'
+    'green'
   )
-
   props.rectangles.forEach((rectangle) => drawRectangle(ctx, rectangle))
+  props.lineGraphs.forEach((graph) => drawLineGraph(ctx, graph))
+
   drawAxis(ctx, props.axis, scale)
   ctx.restore()
 }
@@ -128,6 +147,7 @@ export type CanvasPropType = {
   duplex: number
   axis: AxisDataType
   rectangles: Array<RectangleType>
+  lineGraphs: Array<LineGraphType>
   circles: Array<CircleType>
   locations: Array<LocationType>
   addLocation: any
@@ -169,7 +189,6 @@ const CanvasMain: React.FC<CanvasPropType> = (props) => {
       }
     }
     window.addEventListener('resize', handleResize)
-    window.setTimeout(handleResize, 300)
     handleResize()
   }, [props])
 
