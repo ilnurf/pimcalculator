@@ -1,0 +1,7 @@
+.mainCanvas {
+  background-color: rgb(187, 199, 187);
+  min-width: 500px;
+  min-height: 400px;
+  width: 100%;
+  height: 100%;
+}
