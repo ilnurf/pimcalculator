@@ -119,6 +119,7 @@ function draw(
 ) {
   ctx.save()
   drawLimits(ctx, props.limits)
+  props.rectangles.forEach((rectangle) => drawRectangle(ctx, rectangle))
   // props.circles.forEach((circle) => drawCircle(ctx, circle))
   props.locations.forEach((location) => drawLocations(ctx, location))
   drawFrequency(
@@ -135,7 +136,6 @@ function draw(
     (props.limits.yMax - props.limits.shiftY) * 0.7,
     'green'
   )
-  props.rectangles.forEach((rectangle) => drawRectangle(ctx, rectangle))
   props.lineGraphs.forEach((graph) => drawLineGraph(ctx, graph))
 
   drawAxis(ctx, props.axis, scale)
@@ -166,13 +166,15 @@ const CanvasMain: React.FC<CanvasPropType> = (props) => {
         if (canvas.parentElement && ctx) {
           let r = canvas.parentElement.getBoundingClientRect()
           canvas.width = r.width - 10
-          canvas.height = r.height - 10
           // console.log(r.width, r.height)
           // ctx.fillRect(0, 0, canvas.width, canvas.height)
           // ctx.clearRect(0, 0, window.innerHeight, window.innerWidth)
           let scaleX =
-            (canvas.width - props.limits.paddingX * 2) /
+            (r.width - props.limits.paddingX * 2) /
             (props.limits.xMax - props.limits.xMin)
+          canvas.height =
+            (props.limits.yMax - props.limits.yMin) * scaleX +
+            props.limits.paddingY * 2
           ctx.setTransform(
             scaleX,
             0,
