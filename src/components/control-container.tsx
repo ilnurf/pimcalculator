@@ -8,8 +8,7 @@ import {
   FreqType,
   SetFreqActionType,
   FreqDataType,
-  SetFreqDuplexActionType,
-  setFreqDuplex,
+  showSettingsForm,
 } from '../redux/canvas-reducer'
 
 const mapStateToProps = (state: AppStateType) => ({
@@ -26,7 +25,7 @@ type MapStateToPropsType = {
 
 type MapToDispatchPropsType = {
   setFrequency: (freq: FreqType, f0: string, f1: string) => SetFreqActionType
-  setFreqDuplex: (duplex: string) => SetFreqDuplexActionType
+  showSettingsForm: (show: boolean) => void
 }
 
 type MapOwnToPropsType = {}
@@ -36,4 +35,4 @@ export default connect<
   MapToDispatchPropsType,
   MapOwnToPropsType,
   AppStateType
->(mapStateToProps, { setFrequency, setFreqDuplex })(CanvasControl)
+>(mapStateToProps, { setFrequency, showSettingsForm })(CanvasControl)

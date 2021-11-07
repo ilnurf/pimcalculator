@@ -11,21 +11,21 @@ import {
 } from '../redux/canvas-reducer'
 
 function drawLimits(ctx: CanvasRenderingContext2D, limits: LimitTypes) {
+  ctx.beginPath()
   // ctx.rect(
+  //   limits.xMin + limits.shiftX,
+  //   limits.yMin + limits.shiftY,
+  //   limits.xMax - limits.xMin - 2 * limits.shiftX,
+  //   limits.yMax - limits.yMin - 2 * limits.shiftY
+  // )
+  // ctx.fillStyle = 'lightblue'
+  // ctx.fillRect(
   //   limits.xMin,
   //   limits.yMin,
-  //   limits.xMax - limits.xMin - limits.shiftX * 2,
-  //   limits.yMax - limits.yMin - limits.shiftY * 2
+  //   limits.xMax - limits.xMin,
+  //   limits.yMax - limits.yMin
   // )
-  ctx.fillStyle = 'lightblue'
-  ctx.fillRect(
-    limits.xMin - limits.shiftX,
-    limits.yMin - limits.shiftY,
-    limits.xMax - limits.xMin,
-    limits.yMax - limits.yMin
-  )
   ctx.strokeStyle = 'black'
-  ctx.beginPath()
   ctx.moveTo(limits.xMin, limits.yMin)
   ctx.lineTo(limits.xMax - 2 * limits.shiftX, limits.yMin)
   ctx.stroke()
@@ -126,14 +126,14 @@ function draw(
     ctx,
     props.freqOne,
     props.duplex,
-    (props.limits.yMax - props.limits.shiftY) * 0.7,
+    (props.limits.yMax - props.limits.shiftY) * 0.9,
     'blue'
   )
   drawFrequency(
     ctx,
     props.freqTwo,
     props.duplex,
-    (props.limits.yMax - props.limits.shiftY) * 0.7,
+    (props.limits.yMax - props.limits.shiftY) * 0.9,
     'green'
   )
   props.lineGraphs.forEach((graph) => drawLineGraph(ctx, graph))
@@ -168,22 +168,21 @@ const CanvasMain: React.FC<CanvasPropType> = (props) => {
           canvas.width = r.width - 10
           // console.log(r.width, r.height)
           // ctx.fillRect(0, 0, canvas.width, canvas.height)
-          // ctx.clearRect(0, 0, window.innerHeight, window.innerWidth)
           let scaleX =
             (r.width - props.limits.paddingX * 2) /
             (props.limits.xMax - props.limits.xMin)
           canvas.height =
             (props.limits.yMax - props.limits.yMin) * scaleX +
             props.limits.paddingY * 2
+          ctx.fillStyle = 'lightblue'
+          ctx.fillRect(0, 0, canvas.width, canvas.height)
           ctx.setTransform(
             scaleX,
             0,
             0,
             -scaleX,
-            props.limits.paddingX +
-              (-props.limits.xMin + props.limits.shiftX) * scaleX,
-            (props.limits.yMax - props.limits.yMin - props.limits.shiftY) *
-              scaleX +
+            props.limits.paddingX + -props.limits.xMin * scaleX,
+            (props.limits.yMax - props.limits.yMin) * scaleX +
               props.limits.paddingY
           )
           draw(ctx, props, scaleX)
@@ -197,6 +196,7 @@ const CanvasMain: React.FC<CanvasPropType> = (props) => {
   return (
     <div className={s.mainCanvas}>
       <canvas
+        className={s.canvasSvg}
         ref={canvasRef}
         // width={window.innerWidth - 300}
         // height={window.innerHeight - 200}

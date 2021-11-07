@@ -1,0 +1,78 @@
+.modal {
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.settingsForm {
+  display: block;
+  background-color: rgb(55, 175, 8);
+  margin: 30px;
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.btnsend {
+  padding: 15px;
+  margin: 5px;
+  font-size: 1.3rem;
+  border-radius: 10px;
+  background-color: blueviolet;
+  display: inline-flex;
+}
+
+.btnsend:hover {
+  background-color: rgb(104, 24, 145);
+}
+
+.formField {
+  display: inline-flex;
+  margin: 5px;
+  padding: 5px;
+}
+
+.formLabel {
+  width: 40px;
+  font-size: medium;
+  color: darkblue;
+  padding-right: 10px;
+}
+
+.formInput {
+  font-size: medium;
+  padding: 5px;
+  border-radius: 5px;
+  width: 60px;
+}
+
+.formInput::placeholder {
+  font-size: 0.7rem;
+}
+
+.textsend {
+  font-size: 1.2rem;
+  padding: 5px;
+  resize: none;
+}
+
+.error {
+  font-size: 1.2rem;
+  color: red;
+  margin-left: 5px;
+}
+
+.bandFreq {
+  background-color: deepskyblue;
+  border-radius: 20px;
+  padding: 10px;
+  margin: 10px;
+}
+
+.bandLabel {
+  font-size: 1.5rem;
+}

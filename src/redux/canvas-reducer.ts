@@ -1,6 +1,11 @@
+import { SettingsFormDataType } from '../components/settings-form'
+import { Dispatch } from 'redux'
+import { FORM_ERROR } from 'final-form'
+
 const ADD_LOCATION = 'ADD_LOCATION'
 const SET_FREQ = 'SET_FREQ'
-const SET_FREQ_DUPLEX = 'SET_FREQ_DUPLEX'
+const UPDATE_SETTINGS = 'UPDATE_SETTINGS'
+const SHOW_SETTINGS_FORM = 'SHOW_SETTINGS_FORM'
 
 export type LimitTypes = {
   xMin: number
@@ -60,11 +65,11 @@ let initialState = {
     xMin: 1600,
     xMax: 2000,
     yMin: 0,
-    yMax: 300,
-    paddingX: 20,
-    paddingY: 20,
-    shiftX: 25,
-    shiftY: 30,
+    yMax: 150,
+    paddingX: 50,
+    paddingY: 40,
+    shiftX: 0,
+    shiftY: 0,
   } as LimitTypes,
   axis: {
     nx: 10,
@@ -118,19 +123,19 @@ let initialState = {
       x: 1710,
       y: 0,
       width: 75,
-      height: 240,
+      height: 150,
       borderColor: 'blue',
-      color: 'aqua',
-      opacity: 0.3,
+      color: 'orange',
+      opacity: 0.4,
     },
     {
       x: 1805,
       y: 0,
       width: 75,
-      height: 240,
+      height: 150,
       borderColor: 'blue',
-      color: 'aqua',
-      opacity: 0.3,
+      color: 'orange',
+      opacity: 0.4,
     },
   ] as Array<RectangleType>,
   lineGraphs: [] as Array<LineGraphType>,
@@ -143,6 +148,9 @@ let initialState = {
     f1: 1850,
   } as FreqDataType,
   duplex: -95,
+  freqBandMin: 1805,
+  freqBandMax: 1880,
+  showSettings: false,
 }
 export type CanvasStateType = typeof initialState
 
@@ -311,7 +319,11 @@ initialState.lineGraphs = calcFreqPims2(
 
 const canvasReducer = (
   state = initialState,
-  action: AddLocationActionType | SetFreqActionType | SetFreqDuplexActionType
+  action:
+    | AddLocationActionType
+    | SetFreqActionType
+    | ShowSettingsFromActionType
+    | UpdateSettingsActionType
 ): CanvasStateType => {
   let newState: CanvasStateType
   switch (action.type) {
@@ -347,9 +359,26 @@ const canvasReducer = (
         1000
       )
       return newState
-    case SET_FREQ_DUPLEX:
-      let d = action.duplex !== 0 ? action.duplex : state.duplex
-      return { ...state, duplex: d }
+
+    case SHOW_SETTINGS_FORM:
+      return { ...state, showSettings: action.show }
+    case UPDATE_SETTINGS:
+      newState = { ...state, showSettings: false }
+      newState.limits = { ...state.limits }
+      newState.limits.xMin = Number(action.data.freqMin)
+      newState.limits.xMax = Number(action.data.freqMax)
+      newState.freqBandMin = Number(action.data.freqBandTxMin)
+      newState.freqBandMax = Number(action.data.freqBandTxMax)
+      newState.duplex = Number(action.data.duplex)
+      newState = reCalcAxis(newState)
+      newState.rectangles = [...state.rectangles]
+      newState.rectangles[0] = { ...state.rectangles[0] }
+      newState.rectangles[1] = { ...state.rectangles[1] }
+      newState.rectangles[1].x = newState.freqBandMin
+      newState.rectangles[1].width = newState.freqBandMax - newState.freqBandMin
+      newState.rectangles[0].x = newState.freqBandMin + newState.duplex
+      newState.rectangles[0].width = newState.freqBandMax - newState.freqBandMin
+      return newState
     default:
       return state
   }
@@ -385,7 +414,10 @@ export const setFrequency = (
   if (isNaN(f0new)) f0new = -1
   f1new = Number(f1)
   if (isNaN(f1new)) f1new = -1
-
+  if (f0new > f1new) {
+    f0new = -1
+    f1new = -1
+  }
   return {
     type: SET_FREQ,
     freq,
@@ -394,19 +426,57 @@ export const setFrequency = (
   }
 }
 
-export type SetFreqDuplexActionType = {
-  type: typeof SET_FREQ_DUPLEX
-  duplex: number
+export type ShowSettingsFromActionType = {
+  type: typeof SHOW_SETTINGS_FORM
+  show: boolean
 }
 
-export const setFreqDuplex = (duplex: string): SetFreqDuplexActionType => {
-  let d = Number(duplex)
-  if (isNaN(d)) {
-    d = 0
+export const showSettingsFormAction = (
+  show: boolean
+): ShowSettingsFromActionType => ({
+  type: SHOW_SETTINGS_FORM,
+  show,
+})
+
+export type UpdateSettingsActionType = {
+  type: typeof UPDATE_SETTINGS
+  data: SettingsFormDataType
+}
+
+export const updateSettingsAction = (
+  formData: SettingsFormDataType
+): UpdateSettingsActionType => ({
+  type: UPDATE_SETTINGS,
+  data: formData,
+})
+
+export const showSettingsForm = (show: boolean) => {
+  return (dispatch: Dispatch<ShowSettingsFromActionType>) => {
+    dispatch(showSettingsFormAction(show))
   }
-  return {
-    type: SET_FREQ_DUPLEX,
-    duplex: d,
+}
+
+export const updateSettings = (formData: SettingsFormDataType) => {
+  return (dispatch: Dispatch<UpdateSettingsActionType>) => {
+    let errors: Array<string> = []
+    if (formData.freqMax < formData.freqMin)
+      errors.push('Freq min must be less then freq max')
+    if (formData.freqBandTxMax < formData.freqBandTxMin)
+      errors.push('FreqBand min must be less then freqBand max')
+    if (formData.freqMax < formData.freqBandTxMax)
+      errors.push('Freq max must be more then freqBand max')
+    if (formData.freqMin > formData.freqBandTxMin)
+      errors.push('Freq min must be less then freqBand min')
+    if (
+      Math.abs(formData.duplex) <
+      formData.freqBandTxMax - formData.freqBandTxMin
+    )
+      errors.push('duplex must be more then span between freq max and freq min')
+    if (errors.length > 0)
+      return Promise.resolve({
+        [FORM_ERROR]: errors,
+      })
+    dispatch(updateSettingsAction(formData))
   }
 }
 
