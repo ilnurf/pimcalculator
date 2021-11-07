@@ -154,6 +154,54 @@ let initialState = {
 }
 export type CanvasStateType = typeof initialState
 
+const readSavedData = (initialState: CanvasStateType) => {
+  let n = localStorage.getItem('duplex')
+  if (n) initialState.duplex = Number(n)
+  n = localStorage.getItem('freqBandMin')
+  if (n) initialState.freqBandMin = Number(n)
+  n = localStorage.getItem('freqBandMax')
+  if (n) initialState.freqBandMax = Number(n)
+  n = localStorage.getItem('fMin')
+  if (n) initialState.limits.xMin = Number(n)
+  n = localStorage.getItem('fMax')
+  if (n) initialState.limits.xMax = Number(n)
+  n = localStorage.getItem('freqOne0')
+  if (n) initialState.freqOne.f0 = Number(n)
+  n = localStorage.getItem('freqOne1')
+  if (n) initialState.freqOne.f1 = Number(n)
+  n = localStorage.getItem('freqTwo0')
+  if (n) initialState.freqTwo.f0 = Number(n)
+  n = localStorage.getItem('freqTwo1')
+  if (n) initialState.freqTwo.f1 = Number(n)
+  return initialState
+}
+
+const saveDuplex = (duplex: number) => {
+  localStorage.setItem('duplex', duplex.toString())
+}
+
+const saveFreq = (freq: string, f0: number, f1: number) => {
+  if (freq === 'one') {
+    localStorage.setItem('freqOne0', f0.toString())
+    localStorage.setItem('freqOne1', f1.toString())
+  } else {
+    localStorage.setItem('freqTwo0', f0.toString())
+    localStorage.setItem('freqTwo1', f1.toString())
+  }
+}
+
+const saveLimits = (fMin: number, fMax: number) => {
+  localStorage.setItem('fMin', fMin.toString())
+  localStorage.setItem('fMax', fMax.toString())
+}
+
+const saveFreqBand = (fMin: number, fMax: number) => {
+  localStorage.setItem('freqBandMin', fMin.toString())
+  localStorage.setItem('freqBandMax', fMax.toString())
+}
+
+initialState = readSavedData(initialState)
+
 const reCalcAxis = (state: CanvasStateType): CanvasStateType => {
   let newState = { ...state }
   let dx =
@@ -339,6 +387,7 @@ const canvasReducer = (
         if (action.f1 < 0) {
           newState.freqOne.f1 = state.freqOne.f1
         }
+        saveFreq('one', newState.freqOne.f0, newState.freqOne.f1)
       } else {
         newState.freqTwo = { f0: action.f0, f1: action.f1 }
         if (action.f0 < 0) {
@@ -347,7 +396,9 @@ const canvasReducer = (
         if (action.f1 < 0) {
           newState.freqTwo.f1 = state.freqTwo.f1
         }
+        saveFreq('two', newState.freqTwo.f0, newState.freqTwo.f1)
       }
+
       // newState.rectangles = calcFreqPims(
       //   newState.rectangles,
       //   newState.freqOne,
@@ -378,6 +429,10 @@ const canvasReducer = (
       newState.rectangles[1].width = newState.freqBandMax - newState.freqBandMin
       newState.rectangles[0].x = newState.freqBandMin + newState.duplex
       newState.rectangles[0].width = newState.freqBandMax - newState.freqBandMin
+      // save
+      saveDuplex(newState.duplex)
+      saveLimits(newState.limits.xMin, newState.limits.xMax)
+      saveFreqBand(newState.freqBandMin, newState.freqBandMax)
       return newState
     default:
       return state
